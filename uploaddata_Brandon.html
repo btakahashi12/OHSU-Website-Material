@@ -1,0 +1,690 @@
+<script type="text/javascript">
+
+	//Procedure prototype
+	//**Move to external script once you figure out how to make it work, idiot
+	function Procedure(name, label, allowedInputs, summaryDataset, pipelineName){
+
+		this.name = name;
+		this.label = label;
+		this.pipelineName = pipelineName;
+		this.summaryDataset = summaryDataset;
+
+		this.metaColumns = [];
+		this.columns = [];
+
+		this.validation = [];
+
+		this.update;
+		
+		//For manual entry procedures
+		this.columnTypes = [];
+		this.inputSizes = [];
+		this.primaryColumn;
+		this.rowCount;
+		this.defaults = [];
+		this.updateValues = [];
+
+		if(allowedInputs => 1){
+			this.allowFile = true;
+		}
+		if(allowedInputs => 2){
+			this.allowPaste = true;
+		}
+		if(allowedInputs == 3){
+			this.allowManual = true;
+			this.manualDiv = "manual" + this.name;
+		}
+
+		this.makeMetaFields = function(){
+
+			var row;
+			var cell;
+			var rowCt;
+			var table = document.getElementById("metaTable");
+
+			rowCt = table.rows.length;
+			if(rowCt > 3){
+				for(i = rowCt; i > 3; i--){
+					table.deleteRow(i);
+				}
+			}
+
+			for (var i = 0; i < this.metaColumns.length; i++){
+				row = table.insertRow(-1);
+				cell = row.insertCell(0);
+				cell.innerHTML = "<b>" + (this.metaColumns[i].charAt(0).toUpperCase() + this.metaColumns[i].slice(1)) + ":</b>";
+				cell = row.insertCell(1);
+				cell.innerHTML = "<input type='text' id='" + this.metaColumns[i]  + "' size='20' />";
+			}
+		}
+
+		this.makeManualEntry = function(){
+
+			var table;
+			var rowCt;
+			var rows;
+			var cellCount;
+			var cell;
+			var html;
+			var valueArray;
+
+			if(this.update === true && this.updateValues.length > 0){
+				valueArray = this.updateValues;
+			} else {
+				valueArray = this.defaults;
+			}
+
+			document.getElementById(this.manualDiv).innerHTML = "";
+
+			table = document.createElement('table');
+
+			row = table.insertRow(0);
+			for(cellCount = 0; cellCount < this.columns.length; cellCount++){
+				cell = row.insertCell(cellCount);
+				cell.setAttribute("style", "text-align:center");
+				cell.style.width = "100px";
+				cell.innerHTML = "<b>" + this.columns[cellCount].charAt(0).toUpperCase() + this.columns[cellCount].slice(1) + "</b>";
+			}
+
+			for(rowCt = 0; rowCt < this.rowCount; rowCt++){
+				row = table.insertRow(rowCt + 1);
+
+				for(cellCount = 0; cellCount < this.columns.length; cellCount++){
+					cell = row.insertCell(cellCount);
+					cell.style.width = "100px";
+					cell.setAttribute("style", "text-align:center");
+					inputID = this.name + this.columns[cellCount] + rowCt;
+					html = "<input id='" + inputID + "' type='" + this.columnTypes[cellCount] + "' ";
+
+					for(i = 0; i < valueArray.length; i++){
+						if(i == cellCount && valueArray[i] != null){
+							if(valueArray[i][rowCt] != null){
+								if(this.columnTypes[i] == "text"){
+									html += "value='" + valueArray[i][rowCt] + "' ";
+								} else if(this.columnTypes[i] == "checkbox" && valueArray[i][rowCt] == true){
+									html += "checked ";
+								}
+							}
+						}
+					}
+
+					if(this.inputSizes[cellCount] != null){
+						html += "size='" + this.inputSizes[cellCount] + "' ";
+					}
+					html += "/>";
+					cell.innerHTML = html;
+				}
+			}
+
+			document.getElementById("manual" + this.name).appendChild(table);
+
+			for(rowCt = 0; rowCt < this.rowCount; rowCt++){
+				if(update === true){
+					document.getElementById(this.name + this.primaryColumn + rowCt).disabled = true;
+				} else {
+					document.getElementById(this.name + this.primaryColumn + rowCt).disabled = false;
+				}
+			}
+		}
+	}
+
+	function data(procedure, inputMethod){
+
+		var i;
+
+		this.parameters = [];
+		this.procedure = procedure;
+		this.inputMethod = inputMethod;
+		this.parameters["inputFormat"] = this.inputMethod;
+
+		for(i = 0; i < procedure.columns.length; i++){
+			this.parameters[procedure.columns[i]] = "!";
+		}
+		
+		this.populateData = function(){
+
+			if(inputMethod == "manual" || inputMethod == "paste"){
+
+				if(/\d{5}/.test(document.getElementById("animalID").value)){
+					this.parameters["animalID"] = document.getElementById("animalID").value;
+				} else {
+					alert("Animal ID is required and must be a string of 5 digits.");
+					document.getElementById("animalID").focus();
+					return false;
+				}
+				if(document.getElementById("procDate").value != ""){
+					this.parameters["procDate"] = document.getElementById("procDate").value;
+				} else {
+					alert("Date is required.");
+					document.getElementById("procDate").focus();
+					return false;
+				}
+				if(document.getElementById("timepoint").value != 'None'){
+					this.parameters["timepoint"] = document.getElementById("timepoint").value;
+				} else {
+					alert("Timepoint is required.");
+					document.getElementById("timepoint").focus();
+					return false;
+				}
+				
+				for(i = 0; i < procedure.metaColumns.length; i++){
+					this.parameters[procedure.metaColumns[i]] = document.getElementById(procedure.metaColumns[i]).value;
+				}
+
+				if(inputMethod == "manual"){
+					for(i = 0; i < procedure.rowCount; i++){
+						if(document.getElementById(procedure.name + procedure.primaryColumn + i).value != ""){
+							for(j = 0; j < procedure.columns.length; j++){
+								this.parameters[procedure.columns[j]] += (document.getElementById(procedure.name + procedure.columns[j] + i).value + "\t");
+							}
+						}
+					}
+					
+				} else if(inputMethod == "paste"){
+
+					var pasteData = document.getElementById("pasteText");
+
+					if(pasteData == ""){
+						alert("No data provided in text area.");
+						return false;
+					}
+
+					var lines = pasteDate.split("\n");
+					var values = lines[0].split("\t");
+
+					for(i = 0; i < values.length; i++){
+						for(j = 0; j < procedure.columns.length; j++){
+							if(values[i].toUpperCase() == procedure.columns[j].toUpperCase()){
+								pasteColRef[i] = j;
+							}
+						}
+					}
+
+					for(i = 1; i < lines.length; i++){
+						values = lines[i].split("\t");
+
+						if(values.length > 0){
+							for(j = 0; i < values.length; j++){
+								this.parameters[procedure.columns[pasteColRef[j]]] += values[j] + "\t";
+							}
+						}
+					}
+				}
+
+				for(i = 0; i < procedure.columns.length; i++){
+					this.parameters[procedure.columns[i]] = this.parameters[procedure.columns[i]].substring(1, this.parameters[procedure.columns[i]].length - 1);
+				}
+			}
+			return true;
+		}
+	}
+	
+	function pipeline(procData){
+
+		this.procKey;
+		this.newProcKey;
+
+		this.go = function(){
+			getProcKey();
+		}
+
+		function getProcKey(){
+			//First, get a procedure number (procKey) and increment the number in the keyCounter list
+			LABKEY.Query.selectRows({
+				schemaName: 'lists',
+				queryName: 'keyCounter',
+				columns: ['counter'],
+				filterArray: [LABKEY.Filter.create('procName', procData.procedure.name)],
+				success: updateProcKey,
+				failure: function(){
+					alert("Error: Unable to acquire valid procedure key.");
+					return;
+				}
+			});
+		}
+
+		function updateProcKey(data){
+			//Take data passed from getProcKey and increment to get new procKey
+			this.procKey = data.rows[0].counter;
+			this.newProcKey = this.procKey + 1;
+
+			procData.parameters["procKey"] = this.newProcKey;
+
+			//Update the keyCounter list with new procKey
+			LABKEY.Query.updateRows({
+				schemaName: 'lists',
+				queryName: 'keyCounter',
+				rows: [{
+					"procName": procData.procedure.name,
+					"counter": this.newProcKey
+				}],
+				success: callPipeline,
+				failure: function(){
+					alert("Error: Unable to update procedure key list.");
+					return;
+				}
+			});
+		}
+
+		function callPipeline(){
+
+			var parameters;
+			var protocolCheck;
+
+			LABKEY.Pipeline.getProtocols({
+				taskId: "GDMAnimalCore:pipeline:" + procData.procedure.pipelineName,
+				path: "./",
+				includeWorkbooks: true,
+				success: protocolCheck = function(protocols){
+					for(protocol in protocols){
+						if(protocols.name == procData.procedure.name + "_" + procData.parameters["procKey"] + "_" + procData.parameters["animalID"]){
+							return false;
+						}
+					}
+				}
+			});
+
+			if(protocolCheck == false){
+				alert("A " + procData.procedure.name + " for this animal with this " + procData.procedure.name + " Number (" + procData.parameters["procKey"] + ") already exists. Please refresh and try again.");
+				return false;
+			}
+
+			parameters = "{";
+			for(parameter in procData.parameters){
+				if(parameter != "remove"){
+					parameters += '"' + parameter + '": "' + procData.parameters[parameter] + '",';
+				}
+			}
+			parameters = parameters.slice(0,-1);
+			parameters += "}";
+
+			LABKEY.Pipeline.startAnalysis({
+				taskId: "GDMAnimalCore:pipeline:" + procData.procedure.pipelineName,
+				protocolName: procData.procedure.name + "_" + procData.parameters["procKey"] + "_" + procData.parameters["animalID"],
+				protocolDescription: procData.procedure.label,
+				saveProtocol: false,
+				path: './',
+				files: "Manual_Entry_Proc.txt",
+				jsonParameters: parameters,
+				success: function(){
+					alert("Data uploaded to pipeline successfully.");
+					window.location = LABKEY.ActionURL.buildURL("project", "begin");
+				},
+				failure: function(objFail){
+					alert(objFail.exception);
+				}
+			});
+		}
+
+	}
+	//**
+	//End of prototypes
+
+	//Procedure definitions
+	//**
+	var pGTT = new Procedure("GTT", "Glucose Tolerance Test", 3, "gttSummary", "gttPipeline");
+		pGTT.metaColumns = ["bolus","leptin","glucagon"];
+		pGTT.columns = ['time','glucose','insulin','cPeptide','comment','sample'];
+		pGTT.columnTypes = ['text','text','text','text','text','checkbox'];
+		pGTT.validation = ["/\d+/", "/\d*/", "/\d*/", "/\d*/"]
+		pGTT.inputSizes = [3, 3, 3, 3, 20];
+		pGTT.primaryColumn = 'time';
+		pGTT.rowCount = 8;
+		pGTT.defaults = [
+			[0,1,3,5,10,20,40,60],
+			,,,,
+			[true,true,true,true,true,true,true,true]
+		];
+
+	var pITT = new Procedure("ITT", "Insulin Tolerance Test", 3, "ittSummary", "ittPipeline");
+		pITT.metaColumns = ['bolus'];
+		pITT.columns = ['time','glucose','insulin','cPeptide','comment','sample'];
+		pITT.columnTypes = ['text','text','text','text','text','checkbox'];
+		pITT.inputSizes = [3,3,3,3,20];
+		pITT.primaryColumn = 'time',
+		pITT.rowCount = 11;
+		pITT.defaults = [
+			[0,1,3,5,7,9,11,13,15,20,30],
+			,,,,
+			[true,,,true,,true,,,,,true]
+		];
+
+	var pDEXA = new Procedure("DEXA", "DEXA Scan", 2, "DEXAScans", "dexaPipeline");
+
+	var pMC = new Procedure("MC", "Metabolic Chamber", 2, "MC", "mcPipeline");
+	//**
+	//End of procedure definitions
+
+	var procedures = [pGTT, pITT, pDEXA, pMC];
+	var activeProp;
+
+</script>
+
+<link rel="stylesheet" type="text/css" href="FileUploadField.css" />
+<link rel="icon" type="image/png" href="https://d30y9cdsu7xlg0.cloudfront.net/png/14063-200.png">
+<title>OHSU Upload Data Center</title>
+<div id="actionDiv" style="padding-bottom:15px">
+	<p><b>Select Action:</b></p>
+	<!-- Dropdown list with three different options -->
+	<select id="actionSelect" onchange="actionSelect(this.value)">
+		<option value="None">Select Action</option>
+		<option value="New">Input New Procedure Data</option>
+		<option value="Update">Update Existing Procedure Data</option>
+	</select>
+</div>
+<div id="procedureDiv" style="padding-bottom:15px;">
+	<p><b>Select Data Type:</b></p>
+	<select id="procedureSelect" onchange="procedureSelect(this.value)">
+		<option value="None">Select Procedure</option>
+		<script type="text/javascript">
+			for(i = 0; i <= procedures.length; i++){
+				document.write("<option value='" + procedures[i].name + "'>" + procedures[i].label + "</option>");
+			}
+		</script>
+	</select>
+</div>
+
+<div id="updateDiv">
+	<table>
+		<tr><td><b>Animal ID:</b></td><td><input type="text" id="queryID" size="20" /></td><td><b>Procedure Date:</b></td><td><input type="date" id="queryDate" /></td><td><input class="submit" type="button" value="Search" onclick="createUpdateQuery()" /></tr>
+	</table>
+	<div id="queryDiv" style="padding-top:10px;"></div>
+</div>
+
+<div id="radioButtons" style="padding-bottom:10px;">
+	<form id="inputradioform">
+		<table width="500">
+			<tr><td width="150"><input type="radio" name="inputradio" value="file" onclick="radioButtonSelect(this.value)" />Upload File</td><td width="150"><input type="radio" name="inputradio" value="paste" onclick="radioButtonSelect(this.value)" />Copy/Paste Data</td><span id="manualRadioButton"><td width="150"><input type="radio" name="inputradio" value="manual" onclick="radioButtonSelect(this.value)" />Input Data Manually</td></span></tr>
+		</table>
+	</form>
+</div>
+<div id="file">
+	<form id="upload-run-form" enctype="multipart/form-data" method="POST" class=" x-form">
+		<div id="upload-run-button"></div>
+	</form>
+</div>
+<div id="manualFormDiv">
+	<table id="metaTable" width="300" style="padding-bottom:15px;">
+		<tr><td><b>Monkey #:</b></td><td><input type="text" id="animalID" size="20" /></td></tr>
+		<tr><td><b>Date:</b></td><td><input type="date" id="procDate" size="20" /></td></tr>
+		<tr><td><b>Timepoint:</b></td><td><input type="text" id="timepoint" size="20" /></td></tr>
+	</table>
+	<div id="paste">
+		<b>Paste your data below (tab-separated values from Excel or .TSV file):</b>
+		<form id="pasteForm">
+			<textarea id="pasteText" form="pasteForm" rows="15" cols="150"></textarea>
+		</form>
+	</div>
+	<div id="manual">
+		<script type="text/javascript">
+			for(i=0;i<=procedures.length;i++){
+				if(procedures[i].allowManual == true){
+					document.write("<div id='manual" + procedures[i].name + "'></div>");
+				}
+			}
+		</script>
+	</div>
+	<input class="labkey-button" type="button" value="Submit" onclick="submitData()" />
+</div>
+<div id="result"></div>
+
+<script type="text/javascript">
+	LABKEY.requiresScript("fileBrowser.js");
+	LABKEY.requiresScript("FileContent.js");
+	LABKEY.requiresScript("FileUploadField.js");
+	LABKEY.requiresScript("PipelineAction.js");
+
+	var currentInputType;
+	var rowCount;
+	var action;
+	var activeProc;
+	var manualProcs = [];
+
+	var updateProcNum;
+
+	Ext.onReady(function() {
+		hideInputDivs();
+		//addUploadButton();
+		addFileWebPart();
+
+		for(i = 0; i <= procedures.length; i++){
+			if(procedures[i].allowManual == true){
+				document.getElementById("manual" + procedures[i].name).innerHTML = procedures[i].makeManualFields();
+			}
+		}
+	})
+
+	function hideInputDivs(){
+		document.getElementById("procedureDiv").style.display= 'none';
+		document.getElementById("updateDiv").style.display = 'none';
+		document.getElementById("radioButtons").style.display = 'none';
+		document.getElementById("manualFormDiv").style.display = 'none';
+		document.getElementById("file").style.display = 'none';
+		document.getElementById("paste").style.display = 'none';
+		document.getElementById("manual").style.display = 'none';
+		for(i = 0; i <= procedures.length; i++){
+			if(procedures[i].allowManual == true){
+				document.getElementById("manual" + procedures[i].name).style.display = 'none';
+			}
+		}
+	}
+
+	function createUpdateQuery(){
+
+		var queryID = document.getElementById("queryID").value;
+		var queryDate = document.getElementById("queryDate").value;
+
+		if(queryID=="" && queryDate==""){
+			alert("Animal ID and/or Date are required.");
+			return;
+		}
+
+		var filterArray = [];
+
+		if(queryID!=""){
+			filterArray.push(LABKEY.Filter.create('animalID', queryID));
+		}
+		if(queryDate!=""){
+			filterArray.push(LABKEY.Filter.create('date', queryDate));
+		}
+
+		var queryWebPart = new LABKEY.QueryWebPart({
+			renderTo: 'queryDiv',
+			title: 'Select ' + activeProc.name + ' to update:',
+			schemaName: 'study',
+			queryName: activeProc.summaryDataset,
+			viewName: "default",
+			filters: filterArray,
+			sort: '+procKey',
+			showRecordSelectors: 'true',
+			buttonBar: {
+				includeStandardButtons: false,
+				items: [
+					{text: 'Update selected', requiresSelection: 'true', handler: selectUpdateProc}
+				]
+			}
+		});
+
+		queryWebPart.render();
+		document.getElementById("queryDiv").style.display = "block";
+	}
+
+	function selectUpdateProc(dataRegion){
+
+		if(dataRegion.getSelectionCount() != 1){
+			alert("You can only select one procedure to update at a time.");
+			return false;
+		}
+
+		dataRegion.getSelected({
+			success: function(selRow){
+				LABKEY.Query.selectRows({
+					schemaName: "study",
+					queryName: activeProc.summaryDataset,
+					columns: ["procKey"],
+					filterArray: [LABKEY.Filter.create('lsid',selRow.selected[0])],
+					success: prepUpdateUI,
+					failure: function(){alert("Unable to find procedure referred to by selection. Please reload and try again.");}
+				});
+			},
+			failure: function(){alert("Unable to determine selected row. Please reload and try again.");
+					return false;
+			}
+		});
+	}
+
+	function prepUpdateUI(selData){
+
+		if(activeProc.allowManual == true){
+
+			var procNum;
+			var colName;
+			var tempArray = [];
+
+			document.getElementById('radioButtons').style.display = 'block';
+
+			procNum = selData.rows[0].procKey;
+
+			LABKEY.Query.selectRows({
+				schemaName: "study",
+				queryName: activeProc.name,
+				columns: activeProc.columns,
+				filterArray: [LABKEY.Filter.create('procKey', procNum)],
+				success: function(procData){
+					for(var i = 0; i < activeProc.columns.length; i++){
+						colName = activeProc.columns[i];
+						tempArray = [];
+						for(var j = 0; j < procData.rows.length; j++){
+							tempArray[j] = procData.rows[j][colName];
+						}
+						activeProc.updateValues[i] = tempArray;
+					}
+					activeProc.makeManualEntry();
+				}
+			});
+		}
+	}
+
+	function submitData(){
+		var procData;
+		var objPipeline;
+		var validate;
+			
+		procData = new data(activeProc, currentInputType);
+		validate = procData.populateData();
+		
+		if(validate == false){
+			return;
+		}
+		
+		objPipeline = new pipeline(procData);
+		objPipeline.go();
+	}
+
+	function updateDisplay(){
+		
+		var action;
+		var procedure;
+		
+		action = document.getElementById("actionSelect").value;
+		procedure = document.getElementById("procedureSelect").value;
+		
+		divProc = document.getElementById("procedureDiv");
+		divRadio = document.getElementById("radioButtons");
+		divManualRadio = document.getElementById("manualRadioButton");
+		divFile = document.getElementById("file");
+		divPaste = document.getElementById("paste");
+		divManualForm = document.getElementById("manualFormDiv");
+		divUpdate = document.getElementById("updateDiv");
+		divQuery = document.getElementById("queryDiv");
+		
+		if(action == 'None'){
+			divProc.style.display = "none";
+			document.getElementById("procedureSelect").value = "None"
+			divRadio.style.display = "none";
+			divFile.style.display = "none";
+			divPaste.style.display = "none";
+			divManualForm.style.display = "none";
+		} else {
+			divProc.style.display = "block";
+			if(procedure == "None"){
+				divUpdate.style.display = "none";
+				divRadio.style.display = "none";
+				divFile.style.display = "none";
+				divPaste.style.display = "none";
+				divManualForm.style.display = "none";
+			} else {
+				if(action == "New"){
+					divRadio.style.display = "block";
+					if(activeProc.allowManual == true){
+						divManualRadio.style.display = "inline";
+					} else {
+						divManualRadio.style.display = "none";
+					}
+				} else if(action == "Update"){
+					divUpdate.style.display = "block";
+				}
+			}
+		}
+	}
+	
+	function actionSelect(){
+		action = document.getElementById("actionSelect").value;
+		if(action!="None"){
+			document.getElementById("procedureDiv").style.display="block";
+		} else {
+			document.getElementById("procedureDiv").style.display="none";
+			document.getElementById("procedureSelect").value = "None";
+			procedureSelect();
+		}
+	}
+
+	function procedureSelect(){
+
+		if(document.getElementById("procedureSelect").value == "None"){
+			activeProc = null;
+		} else {
+			for(i = 0; i <= procedures.length; i++){
+				if(procedures[i].name == document.getElementById("procedureSelect").value){
+					activeProc = procedures[i];
+					if(document.getElementById("actionSelect").value == "Update"){
+						activeProc.update = true;
+					} else {
+						activeProc.update = false;
+					}
+					break;
+				}
+			}
+		}
+		
+		updateDisplay();
+
+		activeProc.makeMetaFields();
+		activeProc.makeManualEntry();
+	}
+
+	function radioButtonSelect(inputType){
+
+		if (inputType == currentInputType) {return;} else {currentInputType = inputType;};
+
+		var inputHTML;
+
+		if (inputType == "file") {
+			document.getElementById("manualFormDiv").style.display = 'none';
+			document.getElementById("file").style.display = 'block';
+			document.getElementById("paste").style.display = 'none';
+			document.getElementById("manual").style.display = 'none';
+		} else if(inputType == "paste") {
+			document.getElementById("manualFormDiv").style.display = 'block';
+			document.getElementById("file").style.display = 'none';
+			document.getElementById("paste").style.display = 'block';
+			document.getElementById("manual").style.display = 'none';
+		} else if (inputType == "manual") {
+			document.getElementById("manualFormDiv").style.display = 'block';
+			document.getElementById("file").style.display = 'none';
+			document.getElementById("paste").style.display = 'none';
+			document.getElementById("manual").style.display = 'block';
+			document.getElementById("manual" + activeProc.name).style.display = 'block';
+		}
+	}
+</script>

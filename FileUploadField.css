@@ -1,0 +1,20 @@
+body{
+	text-shadow: 2px 2px 4px #000000;
+	color: #F8F8FF;
+	font-family: Georgia;
+	background-image: url("http://hdwallpaperbackgrounds.net/wp-content/uploads/2015/09/HD-Macaque-Wallpapers.jpg");
+	background-size: 1620px 1012px;
+	opacity: 0.8;
+}
+.submit{
+	opacity: 1;
+}
+.labkey-button{
+	opacity: 1;
+}
+#actionDiv{
+	font-size: 35px;
+}
+#procedureDiv{
+	font-size: 20px;
+}

@@ -1,0 +1,86 @@
+<head>
+	<link rel="stylesheet" type="text/css" href="pilot.css">
+	<title>OHSU Website</title>
+	<link rel="icon" type="image/png" href="http://findicons.com/files/icons/1786/oxygen_refit/128/face_monkey.png">
+	<script type = "text/javascript" src = "pilot.js"></script>
+</head>
+<body>
+<!-- Header ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+	<div id="mySidenav" class="sidenav">
+		<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+		<a href="https://o2.ohsu.edu/calendar.cfm">Calendar</a>
+		<a href="http://www.ohsu.edu/xd/research/centers-institutes/onprc/about/index.cfm">About Us</a>
+		<a href="https://www.amazon.com/166-8823343-5428256">Shop</a>
+		<a href="http://www.ohsu.edu/xd/research/centers-institutes/onprc/contact/index.cfm">Contact Us</a>
+		<a href="http://capeodd.com/wp-content/uploads/cute-monkey.gif">Super Secret Stuffs</a>
+	</div>
+	<!-- Use any element to open the sidenav -->
+	<span onclick="openNav()"><img id = "menuIcon" src = "http://www.freeiconspng.com/uploads/menu-icon-3.png"></span>
+	<!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
+	<div id="main">
+		<header id = "header" class = "content">
+			<img id = "titleImageLeft" class = "titleImage" src = "http://www.clipartbay.com/cliparts/cartoon-monkey-face-dc3gijt.png" alt = "Monkey Cartoon">
+			<a id = "titleText" href = "http://www.ohsu.edu/xd/research/centers-institutes/onprc/special-resource-programs/obese-nhp-resource.cfm">Kievit Lab</a>
+			<img id = "titleImageRight" class = "titleImage" src = "http://www.clipartbay.com/cliparts/cartoon-monkey-face-dc3gijt.png" alt = "Monkey Cartoon">
+			<p>One of the finest labs along the west coast<p>
+		</header>
+		<div class = "content">
+			<p id = "welcome">Welcome to the Kievit Lab Website!!</p>
+			<p id = "date"></p>
+			<script type = "text/javascript">
+				var today = new Date();
+				var mm = today.getMonth()+1; //January is 0!
+				var dd = today.getDate();
+				var yyyy = today.getFullYear();
+				if(dd<10){ //formats the day to have a 0 in front if it is a 1 digit number, example is 08
+					dd='0'+dd
+				} 
+				if(mm<10){ //formats the month to have a 0 in front if it is a 1 digit number, example is 08
+					mm='0'+mm
+				} 
+				var today = mm+'/'+dd+'/'+yyyy;
+				document.getElementById("date").innerHTML = "Today's Date Is " + today;
+			</script>
+			<img id = "randomPIC" src = "http://publicdomainvectors.org/photos/MonkeyFace.png" alt = "Monkey Cartoon">
+		</div>
+		<div id = "constitution" class = "content"> 
+			The Division of Diabetes, Obesity, & Metabolism was established in 2012 at the ONPRC to focus on research efforts on what has been cumulatively 
+			referred to as metabolic diseases, which includes diabetes, obesity, and cardiovascular diseases.  Together these diseases afflict more than 2/3rd 
+			of the population in the U.S. and are the number one cause of preventable death.  Financially, these diseases are responsible for more than $500 billion 
+			in health care costs, which represents more than 30% of health care costs in the United States.  Approximately 1/3rd of Americans are classified clinically 
+			as obese (Body Mass Index >30), with twice that number being overweight and at a high risk of associated complications, such as diabetes and cardiovascular disease.  
+			While there has been intense focus on understanding the pathogenesis and treatment of these metabolic diseases over the last decade, progress has been limited by 
+			appropriate preclinical models that naturally develop the full spectrum of disease complications observed in humans.  Our new Division brings together internationally renowned 
+			scientists with access to critical nonhuman primate models and state-of-the-art research tools and facilities to address this worldwide health epidemic.
+			The scientific goal of this division is to understand the underlying causes and pathophysiology of obesity, diabetes, and associated metabolic diseases, as well as pursuing 
+			effective and safe interventions and therapeutics.  Investigators in this division also have a special emphasis on women's health and on the developmental programming of 
+			metabolic diseases.  This includes expertise in the central nervous system that controls appetite and energy expenditure, pancreas function, and adipose tissue function.  
+			Our investigators utilize a broad array of research tools including noninvasive imaging, complex whole animal studies on physiology and behavior, and in vitro and ex vivo 
+			techniques.  The Obese NHP Resource, developed and directed by Dr. Kevin L. Grove, has established a nonhuman primate model of diet-induced obesity (DIO).  This DIO model
+			established here at the Primate Center has proven to be critical in the understanding of the complex mechanisms underlying the disease process, and, in many cases provides 
+			the only preclinical animal species that truly models the pathophysiology of these diseases in humans.  The NHP models have provided an important competitive advantage for
+			our investigators in obtaining funding from both the NIH and through industry sponsored collaborations.  Our scientists have strong connections with both academic and clinical 
+			departments at OHSU, supporting the dedication of the division and the ONPRC to true translational science.  Our scientists also actively participate in the training and 
+			mentoring of scientists at all levels and are involved in several postdoctoral and clinical training grants.
+			Even though we are a small division at this time, currently consisting of 5 core scientists and 4 staff scientists, we have over $7 million (direct costs) of funding 
+			active during 2012-2013, with 70% coming from NIH and the rest from industry collaborations.  Furthermore, our external collaborators have almost $2.5 million in support 
+			during that time directly related to research using our Obese NHP Resource.
+		</div>
+		<div id = "footer" class = "content">
+			<p>&copy Brandon Takahashi 2016, all rights reserved. Any and all copying of this website or its materials will result in execution at gunpoint.</p>
+		</div>
+	</div>
+	<script>
+		/* Set the width of the side navigation to 250px and the left margin of the page content to 250px */
+		function openNav() {
+			document.getElementById("mySidenav").style.width = "250px";
+			document.getElementById("main").style.marginLeft = "250px";
+		}
+
+		/* Set the width of the side navigation to 0 and the left margin of the page content to 0 */
+		function closeNav() {
+			document.getElementById("mySidenav").style.width = "0";
+			document.getElementById("main").style.marginLeft = "0";
+		}
+	</script>
+</body>
